@@ -8,6 +8,7 @@ import requests
 
 __version__ = '0.1'
 DO_HOST = 'https://api.digitalocean.com'
+
 class Droplet(object):
     pass
 
@@ -26,7 +27,7 @@ class Size(object):
 class SSHKey(object):
     pass
 
-class DigitalOcean(object):
+class Client(object):
 
     def __init__(self, client_id, api_key):
         self.client_id = client_id
@@ -169,7 +170,7 @@ if __name__=='__main__':
     import os
     client_id = os.environ['CLIENT_ID']
     api_key = os.environ['API_KEY']
-    do = DigitalOcean(client_id,api_key)
+    do = Client(client_id,api_key)
     import sys
     fname = sys.argv[1]
     import pprint
