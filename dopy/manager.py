@@ -227,7 +227,7 @@ class DoManager(object):
 
         if not resp.ok:
             raise DoError(json['message'])
-        if resp.get('status') != 'OK':
+        if json.get('status') != 'OK':
             raise DoError(json['error_message'])
 
         return json
@@ -240,4 +240,5 @@ if __name__=='__main__':
     import sys
     fname = sys.argv[1]
     import pprint
+    # size_id: 66, image_id: 1601, region_id: 1
     pprint.pprint(getattr(do, fname)(*sys.argv[2:]))
