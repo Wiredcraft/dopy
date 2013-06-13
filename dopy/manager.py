@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #coding: utf-8
 """
 This module simply sends request to the Digital Ocean API, 
@@ -232,3 +233,13 @@ class DoManager(object):
 
         return json
 
+if __name__=='__main__':
+    import os
+    client_id = os.environ['DO_CLIENT_ID']
+    api_key = os.environ['DO_API_KEY']
+    do = DoManager(client_id, api_key)
+    import sys
+    fname = sys.argv[1]
+    import pprint
+    # size_id: 66, image_id: 1601, region_id: 1
+    pprint.pprint(getattr(do, fname)(*sys.argv[2:]))
