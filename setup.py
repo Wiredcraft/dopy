@@ -13,5 +13,6 @@ setup(
     description="A Python client for the Digital Ocean API",
     url="https://github.com/devo-ps/dopy",
     packages=['dopy'],
+    license='MIT',
     install_requires = ["requests >= 1.0.4"],
 )
