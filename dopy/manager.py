@@ -226,8 +226,14 @@ class DoManager(object):
         except requests.RequestException as e:  # errors from requests
             raise RuntimeError(e)
 
-        if not resp.ok:
-            raise DoError(json['message'])
+        if resp.status_code != requests.codes.ok:
+            if json:
+                if 'error_message' in json:
+                    raise DoError(json['error_message'])
+                elif 'message' in json:
+                    raise DoError(json['message'])
+            # The JSON reponse is bad, so raise an exception with the HTTP status
+            resp.raise_for_status()
         if json.get('status') != 'OK':
             raise DoError(json['error_message'])
 
