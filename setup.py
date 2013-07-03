@@ -14,5 +14,5 @@ setup(
     url="https://github.com/devo-ps/dopy",
     packages=['dopy'],
     license='MIT',
-    install_requires = ["requests >= 1.0.4"],
+    install_requires=["requests >= 1.0.4"],
 )
