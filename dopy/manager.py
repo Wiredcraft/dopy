@@ -132,7 +132,7 @@ class DoManager(object):
         return json['image']
 
     def destroy_image(self, image_id):
-        self.request('/images/%s/' % image_id)
+        self.request('/images/%s/destroy' % image_id)
         return True
 
     def transfer_image(self, image_id, region_id):
