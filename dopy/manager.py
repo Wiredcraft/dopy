@@ -226,6 +226,11 @@ class DoManager(object):
         return self.request('/domains/%s/records/%s/destroy/' % (domain_id, record_id))
         return True
 
+#events===========================================
+    def show_event(self, event_id):
+        json = self.request('/events/%s' % event_id)
+        return json['event']
+
 #low_level========================================
     def request(self, path, params={}, method='GET'):
         params['client_id'] = self.client_id
