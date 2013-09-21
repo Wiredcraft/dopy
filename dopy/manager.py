@@ -93,23 +93,25 @@ class DoManager(object):
         json.pop('status', None)
         return json
 
-    def enable_backups_droplet(self, id, image_id):
+    def enable_backups_droplet(self, id):
         json = self.request('/droplets/%s/enable_backups/' % id)
         json.pop('status', None)
         return json
 
-    def disable_backups_droplet(self, id, image_id):
+    def disable_backups_droplet(self, id):
         json = self.request('/droplets/%s/disable_backups/' % id)
         json.pop('status', None)
         return json
 
-    def rename_droplet(self, id, image_id):
-        json = self.request('/droplets/%s/rename/' % id)
+    def rename_droplet(self, id, name):
+        params = {'name': name}
+        json = self.request('/droplets/%s/rename/' % id, params)
         json.pop('status', None)
         return json
 
-    def destroy_droplet(self, id):
-        json = self.request('/droplets/%s/destroy/' % id)
+    def destroy_droplet(self, id, scrub_data=False):
+        params = {'scrub_data': scrub_data}
+        json = self.request('/droplets/%s/destroy/' % id, params)
         json.pop('status', None)
         return json
 
