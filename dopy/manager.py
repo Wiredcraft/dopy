@@ -22,12 +22,13 @@ class DoManager(object):
         json = self.request('/droplets/')
         return json['droplets']
 
-    def new_droplet(self, name, size_id, image_id, region_id, ssh_key_ids=None, private_networking=False):
+    def new_droplet(self, name, size_id, image_id, region_id, ssh_key_ids=None, virtio=False, private_networking=False):
         params = {
                 'name': name,
                 'size_id': size_id,
                 'image_id': image_id,
                 'region_id': region_id,
+                'virtio': virtio,
                 'private_networking': private_networking,
             }
         if ssh_key_ids:
