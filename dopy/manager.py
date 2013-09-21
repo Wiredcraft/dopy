@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #coding: utf-8
 """
-This module simply sends request to the Digital Ocean API, 
+This module simply sends request to the Digital Ocean API,
 and returns their response as a dict.
 """
 
@@ -22,12 +22,13 @@ class DoManager(object):
         json = self.request('/droplets/')
         return json['droplets']
 
-    def new_droplet(self, name, size_id, image_id, region_id, ssh_key_ids=None):
+    def new_droplet(self, name, size_id, image_id, region_id, ssh_key_ids=None, private_networking=False):
         params = {
                 'name': name,
                 'size_id': size_id,
                 'image_id': image_id,
                 'region_id': region_id,
+                'private_networking': private_networking,
             }
         if ssh_key_ids:
             params['ssh_key_ids'] = ssh_key_ids
