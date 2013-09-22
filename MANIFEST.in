@@ -1,0 +1,1 @@
+include README.rst LICENSE CHANGES test_etcd.py requirements.txt

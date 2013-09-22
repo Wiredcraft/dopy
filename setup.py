@@ -6,13 +6,25 @@ try:
 except ImportError:
     from distutils.core import setup
 
-
 setup(
-    name='dopy',
+    name="copy",
     version=dopy.__version__,
-    description="A Python client for the Digital Ocean API",
+    description="Python client for the Digital Ocean API",
+    long_description=read("README.md"),
+    author="devo.ps",
+    author_email="vincent@devo.ps",
+    maintainer="Vincent Viallet",
+    maintainer_email="vincent@devo.ps",
     url="https://github.com/devo-ps/dopy",
+    download_url="https://github.com/devo-ps/dopy/archive/master.zip",
+    classifiers=("Development Status :: 3 - Alpha",
+                 "Intended Audience :: Developers",
+                 "License :: OSI Approved :: MIT License",
+                 "Operating System :: OS Independent",
+                 "Programming Language :: Python",
+                 "Programming Language :: Python :: 2.6",
+                 "Programming Language :: Python :: 2.7"),
+    license=read("LICENSE"),
     packages=['dopy'],
-    license='MIT',
     install_requires=["requests >= 1.0.4"],
 )
