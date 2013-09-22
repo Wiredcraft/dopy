@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #coding: utf-8
 """
-This module simply sends request to the Digital Ocean API, 
+This module simply sends request to the Digital Ocean API,
 and returns their response as a dict.
 """
 
@@ -22,12 +22,14 @@ class DoManager(object):
         json = self.request('/droplets/')
         return json['droplets']
 
-    def new_droplet(self, name, size_id, image_id, region_id, ssh_key_ids=None):
+    def new_droplet(self, name, size_id, image_id, region_id, ssh_key_ids=None, virtio=False, private_networking=False):
         params = {
                 'name': name,
                 'size_id': size_id,
                 'image_id': image_id,
                 'region_id': region_id,
+                'virtio': virtio,
+                'private_networking': private_networking,
             }
         if ssh_key_ids:
             params['ssh_key_ids'] = ssh_key_ids
@@ -92,23 +94,25 @@ class DoManager(object):
         json.pop('status', None)
         return json
 
-    def enable_backups_droplet(self, id, image_id):
+    def enable_backups_droplet(self, id):
         json = self.request('/droplets/%s/enable_backups/' % id)
         json.pop('status', None)
         return json
 
-    def disable_backups_droplet(self, id, image_id):
+    def disable_backups_droplet(self, id):
         json = self.request('/droplets/%s/disable_backups/' % id)
         json.pop('status', None)
         return json
 
-    def rename_droplet(self, id, image_id):
-        json = self.request('/droplets/%s/rename/' % id)
+    def rename_droplet(self, id, name):
+        params = {'name': name}
+        json = self.request('/droplets/%s/rename/' % id, params)
         json.pop('status', None)
         return json
 
-    def destroy_droplet(self, id):
-        json = self.request('/droplets/%s/destroy/' % id)
+    def destroy_droplet(self, id, scrub_data=False):
+        params = {'scrub_data': scrub_data}
+        json = self.request('/droplets/%s/destroy/' % id, params)
         json.pop('status', None)
         return json
 
@@ -129,7 +133,7 @@ class DoManager(object):
         return json['image']
 
     def destroy_image(self, image_id):
-        self.request('/images/%s/' % image_id)
+        self.request('/images/%s/destroy' % image_id)
         return True
 
     def transfer_image(self, image_id, region_id):
@@ -200,16 +204,33 @@ class DoManager(object):
         if priority: params['priority'] = priority
         if port: params['port'] = port
         if weight: params['weight'] = port
-        json = self.request('/domains/%s/records/new/', params)
+        json = self.request('/domains/%s/records/new/' % domain_id, params)
         return json['domain_record']
 
     def show_domain_record(self, domain_id, record_id):
         json = self.request('/domains/%s/records/%s' % (domain_id, record_id))
         return json['record']
 
+    def edit_domain_record(self, domain_id, record_id, record_type, data, name=None, priority=None, port=None, weight=None):
+        params = {
+                'record_type': record_type,
+                'data': data,
+            }
+        if name: params['name'] = name
+        if priority: params['priority'] = priority
+        if port: params['port'] = port
+        if weight: params['weight'] = port
+        json = self.request('/domains/%s/records/%s/edit/' % (domain_id, record_id), params)
+        return json['domain_record'] if 'domain_record' in json else json['record']  # DO API docs say 'domain_record' for /new/ but 'record' for /edit/.
+
     def destroy_domain_record(self, domain_id, record_id):
         return self.request('/domains/%s/records/%s/destroy/' % (domain_id, record_id))
         return True
+
+#events===========================================
+    def show_event(self, event_id):
+        json = self.request('/events/%s' % event_id)
+        return json['event']
 
 #low_level========================================
     def request(self, path, params={}, method='GET'):
