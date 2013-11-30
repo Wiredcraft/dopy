@@ -205,7 +205,7 @@ class DoManager(object):
         if port: params['port'] = port
         if weight: params['weight'] = port
         json = self.request('/domains/%s/records/new/' % domain_id, params)
-        return json['domain_record']
+        return json['record']
 
     def show_domain_record(self, domain_id, record_id):
         json = self.request('/domains/%s/records/%s' % (domain_id, record_id))
@@ -221,7 +221,7 @@ class DoManager(object):
         if port: params['port'] = port
         if weight: params['weight'] = port
         json = self.request('/domains/%s/records/%s/edit/' % (domain_id, record_id), params)
-        return json['domain_record'] if 'domain_record' in json else json['record']  # DO API docs say 'domain_record' for /new/ but 'record' for /edit/.
+        return json['record']
 
     def destroy_domain_record(self, domain_id, record_id):
         return self.request('/domains/%s/records/%s/destroy/' % (domain_id, record_id))
