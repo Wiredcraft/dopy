@@ -110,8 +110,8 @@ class DoManager(object):
         json.pop('status', None)
         return json
 
-    def destroy_droplet(self, id, scrub_data=False):
-        params = {'scrub_data': scrub_data}
+    def destroy_droplet(self, id, scrub_data=True):
+        params = {'scrub_data': '1' if scrub_data else '0'}
         json = self.request('/droplets/%s/destroy/' % id, params)
         json.pop('status', None)
         return json
