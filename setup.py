@@ -6,11 +6,14 @@ try:
 except ImportError:
     from distutils.core import setup
 
+def read(filename):
+    return open(filename).read()
+
 setup(
-    name="copy",
+    name="dopy",
     version=dopy.__version__,
     description="Python client for the Digital Ocean API",
-    long_description=read("README.md"),
+    long_description=read("README.rst"),
     author="devo.ps",
     author_email="vincent@devo.ps",
     maintainer="Vincent Viallet",
