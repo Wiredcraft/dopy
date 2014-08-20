@@ -206,7 +206,7 @@ class DoManager(object):
         if name: params['name'] = name
         if priority: params['priority'] = priority
         if port: params['port'] = port
-        if weight: params['weight'] = port
+        if weight: params['weight'] = weight
         json = self.request('/domains/%s/records/new/' % domain_id, params)
         return json['record']
 
@@ -222,7 +222,7 @@ class DoManager(object):
         if name: params['name'] = name
         if priority: params['priority'] = priority
         if port: params['port'] = port
-        if weight: params['weight'] = port
+        if weight: params['weight'] = weight
         json = self.request('/domains/%s/records/%s/edit/' % (domain_id, record_id), params)
         return json['record']
 
