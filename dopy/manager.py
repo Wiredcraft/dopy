@@ -455,8 +455,8 @@ class DoManager(object):
 
 if __name__=='__main__':
     import os
-    if os.environ['DO_API_VERSION'] and os.environ['DO_API_VERSION'] == '2':
-        api_token = os.environ['DO_API_TOKEN'] or os.environ['DO_API_KEY']
+    if os.environ.get('DO_API_VERSION') == '2':
+        api_token = os.environ.get('DO_API_TOKEN') or os.environ['DO_API_KEY']
         do = DoManager(None, api_token, 2)
     else:
         client_id = os.environ['DO_CLIENT_ID']
