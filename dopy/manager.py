@@ -6,6 +6,7 @@ and returns their response as a dict.
 """
 
 import requests
+import json as json_module
 
 API_ENDPOINT = 'https://api.digitalocean.com'
 
@@ -30,17 +31,20 @@ class DoManager(object):
     def new_droplet(self, name, size_id, image_id, region_id,
             ssh_key_ids=None, virtio=False, private_networking=False,
             backups_enabled=False):
+
         if self.api_version == 2:
             params = {
-                'name': name,
-                'size': size_id,
-                'image': image_id,
-                'region': region_id,
+                'name': str(name),
+                'size': str(size_id),
+                'image': str(image_id),
+                'region': str(region_id),
                 'virtio': virtio,
                 'private_networking': private_networking,
                 'backups_enabled': backups_enabled,
             }
             if ssh_key_ids:
+                for index in range(len(ssh_key_ids)):
+                    ssh_key_ids[index] = str(ssh_key_ids[index])
                 params['ssh_keys'] = ssh_key_ids
             json = self.request('/droplets', params=params, method='POST')
         else:
@@ -141,7 +145,7 @@ class DoManager(object):
         if self.api_version == 2:
             params = {'image': image_id}
             json = self.droplet_v2_action(id, 'restore', params)
-        else: 
+        else:
             params = {'image_id': image_id}
             json = self.request('/droplets/%s/restore/' % id, params)
         json.pop('status', None)
@@ -202,29 +206,29 @@ class DoManager(object):
         json = self.request('/images/', params)
         return json['images']
 
-    def image_v2_action(self, id, type, params={}):
+    def image_v2_action(self, image_id, image_type, params={}):
         params = {
-            'type': type
+            'type': image_type
         }
-        json = self.request('/images/%s/actions' % id, params=params, method='POST')
+        json = self.request('/images/%s/actions' % image_id, params=params, method='POST')
         return json
 
     def show_image(self, image_id):
-        params= {'image_id': image_id}
+        params = {'image_id': image_id}
         json = self.request('/images/%s' % image_id)
         return json['image']
 
     def destroy_image(self, image_id):
         if self.api_version == 2:
-            self.request('/images/%s' % id, method='DELETE')
-        else: 
+            self.request('/images/%s' % image_id, method='DELETE')
+        else:
             self.request('/images/%s/destroy' % image_id)
         return True
 
     def transfer_image(self, image_id, region_id):
         if self.api_version == 2:
             params = {'region': region_id}
-            json = self.image_v2_action(id, 'transfer', params)
+            json = self.image_v2_action(image_id, 'transfer', params)
         else:
             params = {'region_id': region_id}
             json = self.request('/images/%s/transfer' % image_id, params)
@@ -312,7 +316,7 @@ class DoManager(object):
     def new_domain_record(self, domain_id, record_type, data, name=None, priority=None, port=None, weight=None):
         params = {'data': data}
 
-        if self.api_version == 2: 
+        if self.api_version == 2:
             params['type'] = record_type
         else:
             params['record_type'] = record_type
@@ -337,7 +341,7 @@ class DoManager(object):
     def edit_domain_record(self, domain_id, record_id, record_type, data, name=None, priority=None, port=None, weight=None):
         if self.api_version == 2:
             params['name'] = name # API v.2 allows only record name change
-            json = self.request('/domains/%s/records/%s' % (domain_id, record_id), params, method=PUT)
+            json = self.request('/domains/%s/records/%s' % (domain_id, record_id), params, method='PUT')
             return json['domain_record']
 
         params = {
@@ -355,7 +359,7 @@ class DoManager(object):
     def destroy_domain_record(self, domain_id, record_id):
         if self.api_version == 2:
             self.request('/domains/%s/records/%s' % (domain_id, record_id), method='DELETE')
-        else: 
+        else:
             self.request('/domains/%s/records/%s/destroy/' % (domain_id, record_id))
         return True
 
@@ -370,11 +374,11 @@ class DoManager(object):
         if self.api_version == 2:
             json = self.request('/actions/%s' % event_id)
             return json['action']
-        return show_event(self,action_id)
+        return show_event(self, action_id)
 
     def show_event(self, event_id):
         if self.api_version == 2:
-            return show_action(self,event_id)
+            return show_action(self, event_id)
         json = self.request('/events/%s' % event_id)
         return json['event']
 
@@ -385,7 +389,7 @@ class DoManager(object):
         url = self.api_endpoint+path
 
         if self.api_version == 2:
-            headers = { 'Authorization': "Bearer %s" % self.api_key }
+            headers = {'Authorization': "Bearer %s" % self.api_key}
             resp = self.request_v2(url, params=params, headers=headers, method=method)
         else:
             params['client_id'] = self.client_id
@@ -417,13 +421,14 @@ class DoManager(object):
         return json
 
     def request_v2(self, url, headers={}, params={}, method='GET'):
+        headers['Content-Type'] = 'application/json'
         try:
             if method == 'POST':
-                resp = requests.post(url, params=params, headers=headers, timeout=60)
+                resp = requests.post(url, data=json_module.dumps(params), headers=headers, timeout=60)
                 json = resp.json()
             elif method == 'DELETE':
                 resp = requests.delete(url, headers=headers, timeout=60)
-                json = { 'status': resp.status_code }
+                json = {'status': resp.status_code}
             elif method == 'PUT':
                 resp = requests.put(url, headers=headers, params=params, timeout=60)
                 json = resp.json()
@@ -453,7 +458,7 @@ class DoManager(object):
         return json
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     import os
     if os.environ.get('DO_API_VERSION') == '2':
         api_token = os.environ.get('DO_API_TOKEN') or os.environ['DO_API_KEY']
