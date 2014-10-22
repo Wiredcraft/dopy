@@ -47,6 +47,9 @@ class DoManager(object):
                     ssh_key_ids[index] = str(ssh_key_ids[index])
                 params['ssh_keys'] = ssh_key_ids
             json = self.request('/droplets', params=params, method='POST')
+            created_id = json['droplet']['id']
+            json = self.show_droplet(created_id)
+            return json
         else:
             params = {
                 'name': name,
@@ -61,7 +64,7 @@ class DoManager(object):
                 params['ssh_key_ids'] = ssh_key_ids
 
             json = self.request('/droplets/new', params=params)
-        return json['droplet']
+            return json['droplet']
 
     def show_droplet(self, id):
         json = self.request('/droplets/%s' % id)
