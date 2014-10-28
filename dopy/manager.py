@@ -26,6 +26,9 @@ class DoManager(object):
 
     def all_active_droplets(self):
         json = self.request('/droplets/')
+        if self.api_version == 2:
+            for index in range(len(json['droplets'])):
+                json['droplets'][index][u'ip_address'] = json['droplets'][index]['networks']['v4'][0]['ip_address']
         return json['droplets']
 
     def new_droplet(self, name, size_id, image_id, region_id,
@@ -68,6 +71,8 @@ class DoManager(object):
 
     def show_droplet(self, id):
         json = self.request('/droplets/%s' % id)
+        if self.api_version == 2:
+            json['droplet'][u'ip_address'] = json['droplet']['networks']['v4'][0]['ip_address']
         return json['droplet']
 
     def droplet_v2_action(self, id, type, params={}):
