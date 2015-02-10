@@ -30,7 +30,10 @@ class DoManager(object):
         json = self.request('/droplets/')
         if self.api_version == 2:
             for index in range(len(json['droplets'])):
-                json['droplets'][index][u'ip_address'] = json['droplets'][index]['networks']['v4'][0]['ip_address']
+                try:
+                    json['droplets'][index][u'ip_address'] = json['droplets'][index]['networks']['v4'][0]['ip_address']
+                except IndexError:
+                    json['droplets'][index][u'ip_address'] = ''
         return json['droplets']
 
     def new_droplet(self, name, size_id, image_id, region_id,
