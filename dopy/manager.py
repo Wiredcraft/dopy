@@ -34,7 +34,7 @@ class DoManager(object):
         return json['droplets']
 
     def new_droplet(self, name, size_id, image_id, region_id,
-            ssh_key_ids=None, virtio=False, private_networking=False,
+            ssh_key_ids=None, virtio=True, private_networking=False,
             backups_enabled=False, user_data=None):
 
         if self.api_version == 2:
