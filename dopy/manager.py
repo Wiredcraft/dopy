@@ -23,6 +23,8 @@ class DoManager(object):
 
         if self.api_version == 2:
             self.api_endpoint += '/v2'
+        if self.api_version == 1:
+            self.api_endpoint += '/v1'
 
     def all_active_droplets(self):
         json = self.request('/droplets/')
@@ -33,7 +35,7 @@ class DoManager(object):
 
     def new_droplet(self, name, size_id, image_id, region_id,
             ssh_key_ids=None, virtio=False, private_networking=False,
-            backups_enabled=False):
+            backups_enabled=False, user_data=None):
 
         if self.api_version == 2:
             params = {
@@ -41,36 +43,49 @@ class DoManager(object):
                 'size': str(size_id),
                 'image': str(image_id),
                 'region': str(region_id),
-                'virtio': virtio,
-                'private_networking': private_networking,
-                'backups_enabled': backups_enabled,
+                'virtio': str(virtio).lower(),
+                'private_networking': str(private_networking).lower(),
+                'backups_enabled': str(backups_enabled).lower(),
             }
             if ssh_key_ids:
-                for index in range(len(ssh_key_ids)):
-                    ssh_key_ids[index] = str(ssh_key_ids[index])
+                # Need to be an array in v2
+                if isinstance(ssh_key_ids, basestring):
+                    ssh_key_ids = [ssh_key_ids]
+
+                if type(ssh_key_ids) == list:
+                    for index in range(len(ssh_key_ids)):
+                        ssh_key_ids[index] = str(ssh_key_ids[index])
+
                 params['ssh_keys'] = ssh_key_ids
+
+            if user_data:
+                params['user_data'] = user_data
+
             json = self.request('/droplets', params=params, method='POST')
             created_id = json['droplet']['id']
             json = self.show_droplet(created_id)
             return json
         else:
             params = {
-                'name': name,
-                'size_id': size_id,
-                'image_id': image_id,
-                'region_id': region_id,
-                'virtio': virtio,
-                'private_networking': private_networking,
-                'backups_enabled': backups_enabled,
+                'name': str(name),
+                'size_id': str(size_id),
+                'image_id': str(image_id),
+                'region_id': str(region_id),
+                'virtio': str(virtio).lower(),
+                'private_networking': str(private_networking).lower(),
+                'backups_enabled': str(backups_enabled).lower(),
             }
             if ssh_key_ids:
+                # Need to be a comma separated string 
+                if type(ssh_key_ids) == list:
+                    ssh_key_ids = ','.join(ssh_key_ids)
                 params['ssh_key_ids'] = ssh_key_ids
 
             json = self.request('/droplets/new', params=params)
             return json['droplet']
 
-    def show_droplet(self, id):
-        json = self.request('/droplets/%s' % id)
+    def show_droplet(self, droplet_id):
+        json = self.request('/droplets/%s' % droplet_id)
         if self.api_version == 2:
             try:
                 json['droplet'][u'ip_address'] = json['droplet']['networks']['v4'][0]['ip_address']
@@ -78,131 +93,131 @@ class DoManager(object):
                 json['droplet'][u'ip_address'] = ''
         return json['droplet']
 
-    def droplet_v2_action(self, id, type, params={}):
+    def droplet_v2_action(self, droplet_id, droplet_type, params={}):
         params = {
-            'type': type
+            'type': droplet_type
         }
-        json = self.request('/droplets/%s/actions' % id, params=params, method='POST')
+        json = self.request('/droplets/%s/actions' % droplet_id, params=params, method='POST')
         return json
 
-    def reboot_droplet(self, id):
+    def reboot_droplet(self, droplet_id):
         if self.api_version == 2:
-            json = self.droplet_v2_action(id, 'reboot')
+            json = self.droplet_v2_action(droplet_id, 'reboot')
         else:
-            json = self.request('/droplets/%s/reboot/' % id)
+            json = self.request('/droplets/%s/reboot/' % droplet_id)
         json.pop('status', None)
         return json
 
-    def power_cycle_droplet(self, id):
+    def power_cycle_droplet(self, droplet_id):
         if self.api_version == 2:
-            json = self.droplet_v2_action(id, 'power_cycle')
+            json = self.droplet_v2_action(droplet_id, 'power_cycle')
         else:
-            json = self.request('/droplets/%s/power_cycle/' % id)
+            json = self.request('/droplets/%s/power_cycle/' % droplet_id)
         json.pop('status', None)
         return json
 
-    def shutdown_droplet(self, id):
+    def shutdown_droplet(self, droplet_id):
         if self.api_version == 2:
-            json = self.droplet_v2_action(id, 'shutdown')
+            json = self.droplet_v2_action(droplet_id, 'shutdown')
         else:
-            json = self.request('/droplets/%s/shutdown/' % id)
+            json = self.request('/droplets/%s/shutdown/' % droplet_id)
         json.pop('status', None)
         return json
 
-    def power_off_droplet(self, id):
+    def power_off_droplet(self, droplet_id):
         if self.api_version == 2:
-            json = self.droplet_v2_action(id, 'power_off')
+            json = self.droplet_v2_action(droplet_id, 'power_off')
         else:
-            json = self.request('/droplets/%s/power_off/' % id)
+            json = self.request('/droplets/%s/power_off/' % droplet_id)
         json.pop('status', None)
         return json
 
-    def power_on_droplet(self, id):
+    def power_on_droplet(self, droplet_id):
         if self.api_version == 2:
-            json = self.droplet_v2_action(id, 'power_on')
+            json = self.droplet_v2_action(droplet_id, 'power_on')
         else:
-            json = self.request('/droplets/%s/power_on/' % id)
+            json = self.request('/droplets/%s/power_on/' % droplet_id)
         json.pop('status', None)
         return json
 
-    def password_reset_droplet(self, id):
+    def password_reset_droplet(self, droplet_id):
         if self.api_version == 2:
-            json = self.droplet_v2_action(id, 'password_reset')
+            json = self.droplet_v2_action(droplet_id, 'password_reset')
         else:
-            json = self.request('/droplets/%s/password_reset/' % id)
+            json = self.request('/droplets/%s/password_reset/' % droplet_id)
         json.pop('status', None)
         return json
 
-    def resize_droplet(self, id, size_id):
+    def resize_droplet(self, droplet_id, size_id):
         if self.api_version == 2:
             params = {'size': size_id}
-            json = self.droplet_v2_action(id, 'resize', params)
+            json = self.droplet_v2_action(droplet_id, 'resize', params)
         else:
             params = {'size_id': size_id}
-            json = self.request('/droplets/%s/resize/' % id, params)
+            json = self.request('/droplets/%s/resize/' % droplet_id, params)
         json.pop('status', None)
         return json
 
-    def snapshot_droplet(self, id, name):
+    def snapshot_droplet(self, droplet_id, name):
         params = {'name': name}
         if self.api_version == 2:
-            json = self.droplet_v2_action(id, 'snapshot', params)
+            json = self.droplet_v2_action(droplet_id, 'snapshot', params)
         else:
-            json = self.request('/droplets/%s/snapshot/' % id, params)
+            json = self.request('/droplets/%s/snapshot/' % droplet_id, params)
         json.pop('status', None)
         return json
 
-    def restore_droplet(self, id, image_id):
+    def restore_droplet(self, droplet_id, image_id):
         if self.api_version == 2:
             params = {'image': image_id}
-            json = self.droplet_v2_action(id, 'restore', params)
+            json = self.droplet_v2_action(droplet_id, 'restore', params)
         else:
             params = {'image_id': image_id}
-            json = self.request('/droplets/%s/restore/' % id, params)
+            json = self.request('/droplets/%s/restore/' % droplet_id, params)
         json.pop('status', None)
         return json
 
-    def rebuild_droplet(self, id, image_id):
+    def rebuild_droplet(self, droplet_id, image_id):
         if self.api_version == 2:
             params = {'image': image_id}
-            json = self.droplet_v2_action(id, 'rebuild', params)
+            json = self.droplet_v2_action(droplet_id, 'rebuild', params)
         else:
             params = {'image_id': image_id}
-            json = self.request('/droplets/%s/rebuild/' % id, params)
+            json = self.request('/droplets/%s/rebuild/' % droplet_id, params)
         json.pop('status', None)
         return json
 
-    def enable_backups_droplet(self, id):
+    def enable_backups_droplet(self, droplet_id):
         if self.api_version == 2:
-            json = self.droplet_v2_action(id, 'enable_backups')
+            json = self.droplet_v2_action(droplet_id, 'enable_backups')
         else:
-            json = self.request('/droplets/%s/enable_backups/' % id)
+            json = self.request('/droplets/%s/enable_backups/' % droplet_id)
         json.pop('status', None)
         return json
 
-    def disable_backups_droplet(self, id):
+    def disable_backups_droplet(self, droplet_id):
         if self.api_version == 2:
-            json = self.droplet_v2_action(id, 'disable_backups')
+            json = self.droplet_v2_action(droplet_id, 'disable_backups')
         else:
-            json = self.request('/droplets/%s/disable_backups/' % id)
+            json = self.request('/droplets/%s/disable_backups/' % droplet_id)
         json.pop('status', None)
         return json
 
-    def rename_droplet(self, id, name):
+    def rename_droplet(self, droplet_id, name):
         params = {'name': name}
         if self.api_version == 2:
-            json = self.droplet_v2_action(id, 'rename', params)
+            json = self.droplet_v2_action(droplet_id, 'rename', params)
         else:
-            json = self.request('/droplets/%s/rename/' % id, params)
+            json = self.request('/droplets/%s/rename/' % droplet_id, params)
         json.pop('status', None)
         return json
 
-    def destroy_droplet(self, id, scrub_data=True):
+    def destroy_droplet(self, droplet_id, scrub_data=True):
         if self.api_version == 2:
-            json = self.request('/droplets/%s' % id, method='DELETE')
+            json = self.request('/droplets/%s' % droplet_id, method='DELETE')
         else:
             params = {'scrub_data': '1' if scrub_data else '0'}
-            json = self.request('/droplets/%s/destroy/' % id, params)
+            json = self.request('/droplets/%s/destroy/' % droplet_id, params)
         json.pop('status', None)
         return json
 
@@ -356,9 +371,9 @@ class DoManager(object):
             return json['domain_record']
 
         params = {
-                'record_type': record_type,
-                'data': data,
-            }
+            'record_type': record_type,
+            'data': data,
+        }
 
         if name: params['name'] = name
         if priority: params['priority'] = priority
