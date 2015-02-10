@@ -72,7 +72,10 @@ class DoManager(object):
     def show_droplet(self, id):
         json = self.request('/droplets/%s' % id)
         if self.api_version == 2:
-            json['droplet'][u'ip_address'] = json['droplet']['networks']['v4'][0]['ip_address']
+            try:
+                json['droplet'][u'ip_address'] = json['droplet']['networks']['v4'][0]['ip_address']
+            except IndexError:
+                json['droplet'][u'ip_address'] = ''
         return json['droplet']
 
     def droplet_v2_action(self, id, type, params={}):
