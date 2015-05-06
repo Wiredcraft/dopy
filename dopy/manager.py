@@ -49,7 +49,7 @@ class DoManager(object):
                 'virtio': str(virtio).lower(),
                 'ipv6': str(ipv6).lower(),
                 'private_networking': str(private_networking).lower(),
-                'backups_enabled': str(backups_enabled).lower(),
+                'backups': str(backups_enabled).lower(),
             }
             if ssh_key_ids:
                 # Need to be an array in v2
