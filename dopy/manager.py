@@ -37,7 +37,7 @@ class DoManager(object):
         return json['droplets']
 
     def new_droplet(self, name, size_id, image_id, region_id,
-            ssh_key_ids=None, virtio=True, private_networking=False,
+            ssh_key_ids=None, virtio=True, ipv6=False, private_networking=False,
             backups_enabled=False, user_data=None):
 
         if self.api_version == 2:
@@ -47,8 +47,9 @@ class DoManager(object):
                 'image': str(image_id),
                 'region': str(region_id),
                 'virtio': str(virtio).lower(),
+                'ipv6': str(ipv6).lower(),
                 'private_networking': str(private_networking).lower(),
-                'backups_enabled': str(backups_enabled).lower(),
+                'backups': str(backups_enabled).lower(),
             }
             if ssh_key_ids:
                 # Need to be an array in v2
