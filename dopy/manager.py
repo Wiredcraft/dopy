@@ -357,9 +357,10 @@ class DoManager(object):
 
         if self.api_version == 2:
             json = self.request('/domains/%s/records/' % domain_id, params, method='POST')
+            return json['domain_record']
         else:
             json = self.request('/domains/%s/records/new/' % domain_id, params)
-        return json['record']
+            return json['record']
 
     def show_domain_record(self, domain_id, record_id):
         json = self.request('/domains/%s/records/%s' % (domain_id, record_id))
