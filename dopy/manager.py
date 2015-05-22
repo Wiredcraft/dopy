@@ -371,7 +371,7 @@ class DoManager(object):
 
     def edit_domain_record(self, domain_id, record_id, record_type, data, name=None, priority=None, port=None, weight=None):
         if self.api_version == 2:
-            params['name'] = name # API v.2 allows only record name change
+            params = {'name': name} # API v.2 allows only record name change
             json = self.request('/domains/%s/records/%s' % (domain_id, record_id), params, method='PUT')
             return json['domain_record']
 
