@@ -97,10 +97,10 @@ class DoManager(object):
                 json['droplet'][u'ip_address'] = ''
         return json['droplet']
 
-    def droplet_v2_action(self, droplet_id, droplet_type, params={}):
-        params = {
-            'type': droplet_type
-        }
+    def droplet_v2_action(self, droplet_id, droplet_type, params=None):
+        if params is None:
+            params = {}
+        params['type'] = droplet_type
         json = self.request('/droplets/%s/actions' % droplet_id, params=params, method='POST')
         return json
 
@@ -236,10 +236,10 @@ class DoManager(object):
         json = self.request('/images/', params)
         return json['images']
 
-    def image_v2_action(self, image_id, image_type, params={}):
-        params = {
-            'type': image_type
-        }
+    def image_v2_action(self, image_id, image_type, params=None):
+        if params is None:
+            params = {}
+        params['type'] = image_type
         json = self.request('/images/%s/actions' % image_id, params=params, method='POST')
         return json
 
