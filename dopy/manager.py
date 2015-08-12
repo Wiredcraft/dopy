@@ -451,8 +451,15 @@ class DoManager(object):
 
         return json
 
-    def request_v2(self, url, headers={}, params={}, method='GET'):
+    def request_v2(self, url, headers=None, params=None, method='GET'):
+        if headers is None:
+            headers = {}
+
+        if params is None:
+            params = {}
+
         headers['Content-Type'] = 'application/json'
+
         try:
             if method == 'POST':
                 resp = requests.post(url, data=json_module.dumps(params), headers=headers, timeout=60)
