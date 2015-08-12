@@ -7,11 +7,42 @@ and returns their response as a dict.
 
 import requests
 import json as json_module
+from six import wraps
 
 API_ENDPOINT = 'https://api.digitalocean.com'
 
 class DoError(RuntimeError):
     pass
+
+
+def paginated(func):
+    @wraps(func)
+    def wrapper(self, url, headers=None, params=None, method='GET'):
+        if method != 'GET':
+            return func(self, url, headers, params, method)
+
+        nxt = url
+        out = {}
+
+        while nxt is not None:
+            result = func(self, nxt, headers, params, 'GET')
+            nxt = None
+
+            if isinstance(result, dict):
+                for key, value in result.items():
+                    if key in out and isinstance(out[key], list):
+                        out[key].extend(value)
+                    else:
+                        out[key] = value
+
+                if 'links' in result \
+                        and 'pages' in result['links'] \
+                        and 'next' in result['links']['pages']:
+                    nxt = result['links']['pages']['next']
+
+        return out
+    return wrapper
+
 
 class DoManager(object):
 
@@ -451,6 +482,7 @@ class DoManager(object):
 
         return json
 
+    @paginated
     def request_v2(self, url, headers=None, params=None, method='GET'):
         if headers is None:
             headers = {}
