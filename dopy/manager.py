@@ -30,10 +30,7 @@ class DoManager(object):
         json = self.request('/droplets/')
         if self.api_version == 2:
             for index in range(len(json['droplets'])):
-                try:
-                    json['droplets'][index][u'ip_address'] = json['droplets'][index]['networks']['v4'][0]['ip_address']
-                except IndexError:
-                    json['droplets'][index][u'ip_address'] = ''
+                self.populate_droplet_ips(json['droplets'][index])
         return json['droplets']
 
     def new_droplet(self, name, size_id, image_id, region_id,
@@ -91,10 +88,7 @@ class DoManager(object):
     def show_droplet(self, droplet_id):
         json = self.request('/droplets/%s' % droplet_id)
         if self.api_version == 2:
-            try:
-                json['droplet'][u'ip_address'] = json['droplet']['networks']['v4'][0]['ip_address']
-            except IndexError:
-                json['droplet'][u'ip_address'] = ''
+            self.populate_droplet_ips(json['droplet'])
         return json['droplet']
 
     def droplet_v2_action(self, droplet_id, droplet_type, params=None):
@@ -224,6 +218,15 @@ class DoManager(object):
             json = self.request('/droplets/%s/destroy/' % droplet_id, params)
         json.pop('status', None)
         return json
+
+    def populate_droplet_ips(self, droplet):
+        droplet[u'ip_address'] = ''
+        for networkIndex in range(len(droplet['networks']['v4'])):
+            network = droplet['networks']['v4'][networkIndex]
+            if network['type'] == 'public':
+                droplet[u'ip_address'] = network['ip_address']
+            if network['type'] == 'private':
+                droplet[u'private_ip_address'] = network['ip_address']
 
 #regions==========================================
     def all_regions(self):
