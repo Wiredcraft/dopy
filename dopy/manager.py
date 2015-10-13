@@ -236,6 +236,10 @@ class DoManager(object):
         json = self.request('/images/', params)
         return json['images']
 
+    def private_images(self):
+        json = self.request('/images?private=true')
+        return json['images']
+
     def image_v2_action(self, image_id, image_type, params=None):
         if params is None:
             params = {}
