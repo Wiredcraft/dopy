@@ -1,2 +1,3 @@
+v0.3.7 - 15/11/11 - Add paginated results support, Add private images support, fix ip_address.
 v0.3.0 - 14/09/30 - Add DigitalOcean API v.2 support
 v0.2.2 - 13/09/22 - Add virtio + private network + various typo fixes
