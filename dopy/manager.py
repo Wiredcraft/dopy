@@ -270,6 +270,15 @@ class DoManager(object):
         json = self.request('/images/', params)
         return json['images']
 
+    def private_images(self):
+        if self.api_version == 2:
+            json = self.request('/images?private=true')
+            return json['images']
+        else: 
+            params = {'filter': 'my_images'}
+            json = self.request('/images/', params)
+            return json['images']
+
     def image_v2_action(self, image_id, image_type, params=None):
         if params is None:
             params = {}
