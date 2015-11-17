@@ -190,12 +190,12 @@ class DoManager(object):
             if network['type'] == 'private':
                 droplet[u'private_ip_address'] = network['ip_address']
 
-#regions==========================================
+# regions==========================================
     def all_regions(self):
         json = self.request('/regions/')
         return json['regions']
 
-#images==========================================
+# images==========================================
     def all_images(self, filter='global'):
         params = {'filter': filter}
         json = self.request('/images/', params)
@@ -220,7 +220,6 @@ class DoManager(object):
         return json
 
     def show_image(self, image_id):
-        params = {'image_id': image_id}
         json = self.request('/images/%s' % image_id)
         return json['image']
 
@@ -354,11 +353,12 @@ class DoManager(object):
             path = '/'+path
         url = self.api_endpoint+path
 
-        headers = {'Authorization': "Bearer %s" % self.api_key}
+        headers = {
+            'Authorization': "Bearer %s" % self.api_key,
+        }
         resp = self.request_v2(
             url, params=params, headers=headers, method=method
         )
-
         return resp
 
     @paginated
@@ -373,22 +373,44 @@ class DoManager(object):
 
         try:
             if method == 'POST':
-                resp = requests.post(url, data=json_module.dumps(params), headers=headers, timeout=60)
+                resp = requests.post(
+                    url,
+                    data=json_module.dumps(params),
+                    headers=headers,
+                    timeout=60
+                )
                 json = resp.json()
             elif method == 'DELETE':
-                resp = requests.delete(url, headers=headers, timeout=60)
-                json = {'status': resp.status_code}
+                resp = requests.delete(
+                    url,
+                    headers=headers,
+                    timeout=60
+                )
+                json = {
+                    'status': resp.status_code
+                }
             elif method == 'PUT':
-                resp = requests.put(url, headers=headers, params=params, timeout=60)
+                resp = requests.put(
+                    url,
+                    headers=headers,
+                    params=params,
+                    timeout=60
+                )
                 json = resp.json()
             elif method == 'GET':
-                resp = requests.get(url, headers=headers, params=params, timeout=60)
+                resp = requests.get(
+                    url,
+                    headers=headers,
+                    params=params,
+                    timeout=60)
                 json = resp.json()
             else:
                 raise DoError('Unsupported method %s' % method)
 
-        except ValueError:  # requests.models.json.JSONDecodeError
-            raise ValueError("The API server doesn't respond with a valid json")
+        except (ValueError, requests.models.json.JSONDecodeError):
+            raise ValueError(
+                "The API server doesn't respond with a valid json"
+            )
         except requests.RequestException as e:  # errors from requests
             raise RuntimeError(e)
 
@@ -398,7 +420,8 @@ class DoManager(object):
                     raise DoError(json['error_message'])
                 elif 'message' in json:
                     raise DoError(json['message'])
-            # The JSON reponse is bad, so raise an exception with the HTTP status
+            # The JSON reponse is bad,
+            # so raise an exception with the HTTP status
             resp.raise_for_status()
 
         if json.get('id') == 'not_found':
