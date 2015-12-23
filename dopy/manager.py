@@ -456,6 +456,99 @@ class DoManager(object):
         json = self.request('/events/%s' % event_id)
         return json['event']
 
+#floating_ips=====================================
+    v2_api_required_str = ('This feature requires the V2 API. ' \
+        'In order to continue, update DO_API_VERSION to 2.')
+
+    def all_floating_ips(self):
+        """
+        Lists all of the Floating IPs available on the account.
+        """
+        if self.api_version == 2:
+            json = self.request('/floating_ips')
+            return json['floating_ips']
+        else:
+            raise DOError(v2_api_required_str)
+
+    def new_floating_ip(self, **kwargs):
+        """
+        Creates a Floating IP and assigns it to a Droplet or reserves it to a region.
+        """
+        droplet_id = kwargs.get('droplet_id')
+        region = kwargs.get('region')
+
+        if self.api_version == 2:
+            if droplet_id is not None and region is not None:
+                raise DOError('Only one of droplet_id and region is required to create a Floating IP. ' \
+                    'Set one of the variables and try again.')
+            elif droplet_id is None and region is None:
+                raise DOError('droplet_id or region is required to create a Floating IP. ' \
+                    'Set one of the variables and try again.')
+            else:
+                if droplet_id is not None:
+                    params = {'droplet_id': droplet_id}
+                else:
+                    params = {'region': region}
+
+                json = self.request('/floating_ips', params=params, method='POST')
+                return json['floating_ip']
+        else:
+            raise DOError(v2_api_required_str)
+
+    def destroy_floating_ip(self, ip_addr):
+        """
+        Deletes a Floating IP and removes it from the account.
+        """
+        if self.api_version == 2:
+            self.request('/floating_ips/' + ip_addr, method='DELETE')
+        else:
+            raise DOError(v2_api_required_str)
+
+    def assign_floating_ip(self, ip_addr, droplet_id):
+        """
+        Assigns a Floating IP to a Droplet.
+        """
+        if self.api_version == 2:
+            params = {'type': 'assign','droplet_id': droplet_id}
+
+            json = self.request('/floating_ips/' + ip_addr + '/actions', params=params, method='POST')
+            return json['action']
+        else:
+            raise DOError(v2_api_required_str)
+
+    def unassign_floating_ip(self, ip_addr):
+        """
+        Unassign a Floating IP from a Droplet.
+        The Floating IP will be reserved in the region but not assigned to a Droplet.
+        """
+        if self.api_version == 2:
+            params = {'type': 'unassign'}
+
+            json = self.request('/floating_ips/' + ip_addr + '/actions', params=params, method='POST')
+            return json['action']
+        else:
+            raise DOError(v2_api_required_str)
+
+    def list_floating_ip_actions(self, ip_addr):
+        """
+        Retrieve a list of all actions that have been executed on a Floating IP.
+        """
+        if self.api_version == 2:
+            json = self.request('/floating_ips/' + ip_addr + '/actions')
+            return json['actions']
+        else:
+            raise DOError(v2_api_required_str)
+
+    def get_floating_ip_action(self, ip_addr, action_id):
+        """
+        Retrieve the status of a Floating IP action.
+        """
+        if self.api_version == 2:
+            json = self.request('/floating_ips/' + ip_addr + '/actions/' + action_id)
+            return json['action']
+        else:
+            raise DOError(v2_api_required_str)
+
 #low_level========================================
     def request(self, path, params={}, method='GET'):
         if not path.startswith('/'):
