@@ -468,7 +468,7 @@ class DoManager(object):
             json = self.request('/floating_ips')
             return json['floating_ips']
         else:
-            raise DOError(v2_api_required_str)
+            raise DoError(v2_api_required_str)
 
     def new_floating_ip(self, **kwargs):
         """
@@ -479,10 +479,10 @@ class DoManager(object):
 
         if self.api_version == 2:
             if droplet_id is not None and region is not None:
-                raise DOError('Only one of droplet_id and region is required to create a Floating IP. ' \
+                raise DoError('Only one of droplet_id and region is required to create a Floating IP. ' \
                     'Set one of the variables and try again.')
             elif droplet_id is None and region is None:
-                raise DOError('droplet_id or region is required to create a Floating IP. ' \
+                raise DoError('droplet_id or region is required to create a Floating IP. ' \
                     'Set one of the variables and try again.')
             else:
                 if droplet_id is not None:
@@ -493,7 +493,7 @@ class DoManager(object):
                 json = self.request('/floating_ips', params=params, method='POST')
                 return json['floating_ip']
         else:
-            raise DOError(v2_api_required_str)
+            raise DoError(v2_api_required_str)
 
     def destroy_floating_ip(self, ip_addr):
         """
@@ -502,7 +502,7 @@ class DoManager(object):
         if self.api_version == 2:
             self.request('/floating_ips/' + ip_addr, method='DELETE')
         else:
-            raise DOError(v2_api_required_str)
+            raise DoError(v2_api_required_str)
 
     def assign_floating_ip(self, ip_addr, droplet_id):
         """
@@ -514,7 +514,7 @@ class DoManager(object):
             json = self.request('/floating_ips/' + ip_addr + '/actions', params=params, method='POST')
             return json['action']
         else:
-            raise DOError(v2_api_required_str)
+            raise DoError(v2_api_required_str)
 
     def unassign_floating_ip(self, ip_addr):
         """
@@ -527,7 +527,7 @@ class DoManager(object):
             json = self.request('/floating_ips/' + ip_addr + '/actions', params=params, method='POST')
             return json['action']
         else:
-            raise DOError(v2_api_required_str)
+            raise DoError(v2_api_required_str)
 
     def list_floating_ip_actions(self, ip_addr):
         """
@@ -537,7 +537,7 @@ class DoManager(object):
             json = self.request('/floating_ips/' + ip_addr + '/actions')
             return json['actions']
         else:
-            raise DOError(v2_api_required_str)
+            raise DoError(v2_api_required_str)
 
     def get_floating_ip_action(self, ip_addr, action_id):
         """
@@ -547,7 +547,7 @@ class DoManager(object):
             json = self.request('/floating_ips/' + ip_addr + '/actions/' + action_id)
             return json['action']
         else:
-            raise DOError(v2_api_required_str)
+            raise DoError(v2_api_required_str)
 
 #low_level========================================
     def request(self, path, params={}, method='GET'):
