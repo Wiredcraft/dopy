@@ -68,6 +68,18 @@ sizes, images and datacenters; ex.
 
     >>> do.show_domain('exapmle.com')
     >>> do.new_droplet('new_droplet', '512mb', 'lamp', 'ams2')
+
+Methods for Floating IPs are:
+
+.. code-block:: pycon
+
+    >>> do.all_floating_ips()
+    >>> do.new_floating_ip(droplet_id, region)
+    >>> do.destroy_floating_ip(ip_addr)
+    >>> do.assign_floating_ip(ip_addr)
+    >>> do.unassign_floating_ip(ip_addr)
+    >>> do.list_floating_ip_actions(ip_addr)
+    >>> do.get_floating_ip_action(ip_addr, action_id)
                                     
 
 
