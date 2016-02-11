@@ -336,18 +336,20 @@ class DoManager(object):
         )
         return True
 
-# events(actions in v2 API)========================
+# actions ========================
     def show_all_actions(self):
         json = self.request('/actions')
         return json['actions']
 
-    # TODO: ERROR
     def show_action(self, action_id):
-        json = self.request('/actions/%s' % event_id)
+        json = self.request('/actions/%s' % action_id)
         return json['action']
 
     def show_event(self, event_id):
-        return show_action(self, event_id)
+        warnings.warn(("show_event method is deprecated "
+                       "(use show_action instead)"),
+                      DeprecationWarning)
+        return self.show_action(self, event_id)
 
 # low_level========================================
     def request(self, path, params={}, method='GET'):
