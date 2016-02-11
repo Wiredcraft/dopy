@@ -16,6 +16,7 @@ API_ENDPOINT = 'https://api.digitalocean.com'
 
 warnings.simplefilter('always', DeprecationWarning)
 
+
 class DoError(RuntimeError):
     pass
 
@@ -330,12 +331,9 @@ class DoManager(object):
 
     def edit_domain_record(self, domain_id, record_id, record_type, data,
                            name=None, priority=None, port=None, weight=None):
-        params = {'name': name}  # API v.2 allows only record name change
-        json = self.request(
-            '/domains/%s/records/%s' % (domain_id, record_id),
-            params,
-            method='PUT'
-        )
+        params = {'name': name}
+        json = self.request('/domains/%s/records/%s' % (domain_id, record_id),
+                            params, method='PUT')
         return json['domain_record']
 
     def destroy_domain_record(self, domain_id, record_id):
@@ -358,6 +356,84 @@ class DoManager(object):
                        "(use show_action instead)"),
                       DeprecationWarning)
         return self.show_action(self, event_id)
+
+# floating_ips=====================================
+
+    def all_floating_ips(self):
+        """
+        Lists all of the Floating IPs available on the account.
+        """
+        json = self.request('/floating_ips')
+        return json['floating_ips']
+
+    def new_floating_ip(self, **kwargs):
+        """
+        Creates a Floating IP and assigns it to a Droplet or reserves
+        it to a region.
+
+        """
+        droplet_id = kwargs.get('droplet_id')
+        region = kwargs.get('region')
+
+        if droplet_id is not None and region is not None:
+            raise DoError(('Only one of droplet_id and region is '
+                           'required to create a Floating IP. '
+                           'Set one of the variables and try again.'))
+        elif droplet_id is None and region is None:
+            raise DoError(('droplet_id or region is required to '
+                           'create a Floating IP. '
+                           'Set one of the variables and try again.'))
+        else:
+            if droplet_id is not None:
+                params = {'droplet_id': droplet_id}
+            else:
+                params = {'region': region}
+
+            json = self.request('/floating_ips', params=params, method='POST')
+            return json['floating_ip']
+
+    def destroy_floating_ip(self, ip_addr):
+        """
+        Deletes a Floating IP and removes it from the account.
+        """
+        self.request('/floating_ips/' + ip_addr, method='DELETE')
+
+    def assign_floating_ip(self, ip_addr, droplet_id):
+        """
+        Assigns a Floating IP to a Droplet.
+        """
+        params = {'type': 'assign', 'droplet_id': droplet_id}
+
+        json = self.request('/floating_ips/' + ip_addr + '/actions',
+                            params=params, method='POST')
+        return json['action']
+
+    def unassign_floating_ip(self, ip_addr):
+        """Unassign a Floating IP from a Droplet.
+
+        The Floating IP will be reserved in the region but not
+        assigned to a Droplet.
+        """
+        params = {'type': 'unassign'}
+
+        json = self.request('/floating_ips/' + ip_addr + '/actions',
+                            params=params, method='POST')
+        return json['action']
+
+    def list_floating_ip_actions(self, ip_addr):
+        """Retrieve a list of all actions that have been executed on a
+        Floating IP.
+        """
+        json = self.request('/floating_ips/' + ip_addr + '/actions')
+        return json['actions']
+
+    def get_floating_ip_action(self, ip_addr, action_id):
+        """
+        Retrieve the status of a Floating IP action.
+        """
+        json = self.request('/floating_ips/{}/actions/{}'.format(ip_addr,
+                                                                 action_id))
+        return json['action']
 
 # low_level========================================
     def request(self, path, params={}, method='GET'):
