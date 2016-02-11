@@ -443,11 +443,10 @@ class DoManager(object):
 
 
 if __name__ == '__main__':
-    import os
-    api_token = os.environ.get('DO_API_TOKEN') or os.environ['DO_API_KEY']
-    do = DoManager(None, api_token)
-    import sys
-    fname = sys.argv[1]
     import pprint
+    import sys
+
+    do = DoManager()
+    fname = sys.argv[1]
     # size_id: 66, image_id: 1601, region_id: 1
     pprint.pprint(getattr(do, fname)(*sys.argv[2:]))
