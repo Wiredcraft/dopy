@@ -1,12 +1,15 @@
 #!/usr/bin/env python
-#coding: utf-8
+# coding: utf-8
 """
 This module simply sends request to the Digital Ocean API,
 and returns their response as a dict.
 """
 
-import requests
 import json as json_module
+import warnings
+
+import requests
+
 from six import wraps
 
 API_ENDPOINT = 'https://api.digitalocean.com'
@@ -47,11 +50,23 @@ def paginated(func):
 
 class DoManager(object):
 
-    def __init__(self, client_id, api_key, api_version=2):
+    def __init__(self, client_id=None, api_key=None, api_version=None,
+                 api_token=None):
+        if api_version:
+            warnings.warn("api_version argument is deprecated",
+                          DeprecationWarning)
+        if client_id:
+            warnings.warn("client_id argument is deprecated",
+                          DeprecationWarning)
+        if api_key:
+            warnings.warn("api_key argument is deprecated",
+                          DeprecationWarning)
+            if not api_token:
+                api_token = api_key
+
         self.api_endpoint = API_ENDPOINT
-        self.client_id = client_id
-        self.api_key = api_key
         self.api_endpoint += '/v2'
+        self.api_key = api_key
 
     def all_active_droplets(self):
         json = self.request('/droplets/')
