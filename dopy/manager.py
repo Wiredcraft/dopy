@@ -4,8 +4,8 @@
 This module simply sends request to the Digital Ocean API,
 and returns their response as a dict.
 """
-
 import json as json_module
+import os
 import warnings
 
 import requests
@@ -14,6 +14,7 @@ from six import wraps
 
 API_ENDPOINT = 'https://api.digitalocean.com'
 
+warnings.simplefilter('always', DeprecationWarning)
 
 class DoError(RuntimeError):
     pass
@@ -64,9 +65,16 @@ class DoManager(object):
             if not api_token:
                 api_token = api_key
 
+        if not api_token:
+            api_token = os.environ.get('DO_API_TOKEN')
+
+        if not api_token:
+            raise ValueError(('api_token must be passed either as argument or '
+                              'as environment var (DO_API_TOKEN).'))
+
         self.api_endpoint = API_ENDPOINT
         self.api_endpoint += '/v2'
-        self.api_key = api_key
+        self.api_key = api_token
 
     def all_active_droplets(self):
         json = self.request('/droplets/')
