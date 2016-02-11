@@ -217,13 +217,8 @@ class DoManager(object):
         return json['images']
 
     def private_images(self):
-        if self.api_version == 2:
-            json = self.request('/images?private=true')
-            return json['images']
-        else:
-            params = {'filter': 'my_images'}
-            json = self.request('/images/', params)
-            return json['images']
+        json = self.request('/images?private=true')
+        return json['images']
 
     def image_v2_action(self, image_id, image_type, params=None):
         if params is None:
@@ -286,10 +281,7 @@ class DoManager(object):
             'name': name,
             'ip_address': ip
         }
-        if self.api_version == 2:
-            json = self.request('/domains', params=params, method='POST')
-        else:
-            json = self.request('/domains/new/', params)
+        json = self.request('/domains', params=params, method='POST')
         return json['domain']
 
     def show_domain(self, domain_id):
@@ -351,16 +343,11 @@ class DoManager(object):
 
     # TODO: ERROR
     def show_action(self, action_id):
-        if self.api_version == 2:
-            json = self.request('/actions/%s' % event_id)
-            return json['action']
-        return show_event(self, action_id)
+        json = self.request('/actions/%s' % event_id)
+        return json['action']
 
     def show_event(self, event_id):
-        if self.api_version == 2:
-            return show_action(self, event_id)
-        json = self.request('/events/%s' % event_id)
-        return json['event']
+        return show_action(self, event_id)
 
 # low_level========================================
     def request(self, path, params={}, method='GET'):
