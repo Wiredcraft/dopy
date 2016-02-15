@@ -1,15 +1,20 @@
 #!/usr/bin/env python
-#coding: utf-8
+# coding: utf-8
 """
 This module simply sends request to the Digital Ocean API,
 and returns their response as a dict.
 """
+import json as json_module
+import os
+import warnings
 
 import requests
-import json as json_module
+
 from six import wraps
 
 API_ENDPOINT = 'https://api.digitalocean.com'
+
+warnings.simplefilter('always', DeprecationWarning)
 
 
 class DoError(RuntimeError):
@@ -47,11 +52,30 @@ def paginated(func):
 
 class DoManager(object):
 
-    def __init__(self, client_id, api_key, api_version=2):
+    def __init__(self, client_id=None, api_key=None, api_version=None,
+                 api_token=None):
+        if api_version:
+            warnings.warn("api_version argument is deprecated",
+                          DeprecationWarning)
+        if client_id:
+            warnings.warn("client_id argument is deprecated",
+                          DeprecationWarning)
+        if api_key:
+            warnings.warn("api_key argument is deprecated",
+                          DeprecationWarning)
+            if not api_token:
+                api_token = api_key
+
+        if not api_token:
+            api_token = os.environ.get('DO_API_TOKEN')
+
+        if not api_token:
+            raise ValueError(('api_token must be passed either as argument or '
+                              'as environment var (DO_API_TOKEN).'))
+
         self.api_endpoint = API_ENDPOINT
-        self.client_id = client_id
-        self.api_key = api_key
         self.api_endpoint += '/v2'
+        self.api_key = api_token
 
     def all_active_droplets(self):
         json = self.request('/droplets/')
@@ -202,13 +226,8 @@ class DoManager(object):
         return json['images']
 
     def private_images(self):
-        if self.api_version == 2:
-            json = self.request('/images?private=true')
-            return json['images']
-        else:
-            params = {'filter': 'my_images'}
-            json = self.request('/images/', params)
-            return json['images']
+        json = self.request('/images?private=true')
+        return json['images']
 
     def image_v2_action(self, image_id, image_type, params=None):
         if params is None:
@@ -271,10 +290,7 @@ class DoManager(object):
             'name': name,
             'ip_address': ip
         }
-        if self.api_version == 2:
-            json = self.request('/domains', params=params, method='POST')
-        else:
-            json = self.request('/domains/new/', params)
+        json = self.request('/domains', params=params, method='POST')
         return json['domain']
 
     def show_domain(self, domain_id):
@@ -315,12 +331,9 @@ class DoManager(object):
 
     def edit_domain_record(self, domain_id, record_id, record_type, data,
                            name=None, priority=None, port=None, weight=None):
-        params = {'name': name}  # API v.2 allows only record name change
-        json = self.request(
-            '/domains/%s/records/%s' % (domain_id, record_id),
-            params,
-            method='PUT'
-        )
+        params = {'name': name}
+        json = self.request('/domains/%s/records/%s' % (domain_id, record_id),
+                            params, method='PUT')
         return json['domain_record']
 
     def destroy_domain_record(self, domain_id, record_id):
@@ -329,23 +342,98 @@ class DoManager(object):
         )
         return True
 
-# events(actions in v2 API)========================
+# actions ========================
     def show_all_actions(self):
         json = self.request('/actions')
         return json['actions']
 
-    # TODO: ERROR
     def show_action(self, action_id):
-        if self.api_version == 2:
-            json = self.request('/actions/%s' % event_id)
-            return json['action']
-        return show_event(self, action_id)
+        json = self.request('/actions/%s' % action_id)
+        return json['action']
 
     def show_event(self, event_id):
-        if self.api_version == 2:
-            return show_action(self, event_id)
-        json = self.request('/events/%s' % event_id)
-        return json['event']
+        warnings.warn(("show_event method is deprecated "
+                       "(use show_action instead)"),
+                      DeprecationWarning)
+        return self.show_action(self, event_id)
+
+# floating_ips=====================================
+
+    def all_floating_ips(self):
+        """
+        Lists all of the Floating IPs available on the account.
+        """
+        json = self.request('/floating_ips')
+        return json['floating_ips']
+
+    def new_floating_ip(self, **kwargs):
+        """
+        Creates a Floating IP and assigns it to a Droplet or reserves
+        it to a region.
+
+        """
+        droplet_id = kwargs.get('droplet_id')
+        region = kwargs.get('region')
+
+        if droplet_id is not None and region is not None:
+            raise DoError(('Only one of droplet_id and region is '
+                           'required to create a Floating IP. '
+                           'Set one of the variables and try again.'))
+        elif droplet_id is None and region is None:
+            raise DoError(('droplet_id or region is required to '
+                           'create a Floating IP. '
+                           'Set one of the variables and try again.'))
+        else:
+            if droplet_id is not None:
+                params = {'droplet_id': droplet_id}
+            else:
+                params = {'region': region}
+
+            json = self.request('/floating_ips', params=params, method='POST')
+            return json['floating_ip']
+
+    def destroy_floating_ip(self, ip_addr):
+        """
+        Deletes a Floating IP and removes it from the account.
+        """
+        self.request('/floating_ips/' + ip_addr, method='DELETE')
+
+    def assign_floating_ip(self, ip_addr, droplet_id):
+        """
+        Assigns a Floating IP to a Droplet.
+        """
+        params = {'type': 'assign', 'droplet_id': droplet_id}
+
+        json = self.request('/floating_ips/' + ip_addr + '/actions',
+                            params=params, method='POST')
+        return json['action']
+
+    def unassign_floating_ip(self, ip_addr):
+        """Unassign a Floating IP from a Droplet.
+
+        The Floating IP will be reserved in the region but not
+        assigned to a Droplet.
+        """
+        params = {'type': 'unassign'}
+
+        json = self.request('/floating_ips/' + ip_addr + '/actions',
+                            params=params, method='POST')
+        return json['action']
+
+    def list_floating_ip_actions(self, ip_addr):
+        """Retrieve a list of all actions that have been executed on a
+        Floating IP.
+        """
+        json = self.request('/floating_ips/' + ip_addr + '/actions')
+        return json['actions']
+
+    def get_floating_ip_action(self, ip_addr, action_id):
+        """
+        Retrieve the status of a Floating IP action.
+        """
+        json = self.request('/floating_ips/{}/actions/{}'.format(ip_addr,
+                                                                 action_id))
+        return json['action']
 
 # low_level========================================
     def request(self, path, params={}, method='GET'):
@@ -431,11 +519,10 @@ class DoManager(object):
 
 
 if __name__ == '__main__':
-    import os
-    api_token = os.environ.get('DO_API_TOKEN') or os.environ['DO_API_KEY']
-    do = DoManager(None, api_token)
-    import sys
-    fname = sys.argv[1]
     import pprint
+    import sys
+
+    do = DoManager()
+    fname = sys.argv[1]
     # size_id: 66, image_id: 1601, region_id: 1
     pprint.pprint(getattr(do, fname)(*sys.argv[2:]))
