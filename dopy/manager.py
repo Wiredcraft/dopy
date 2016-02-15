@@ -495,7 +495,7 @@ class DoManager(object):
             else:
                 raise DoError('Unsupported method %s' % method)
 
-        except (ValueError, requests.models.json.JSONDecodeError):
+        except ValueError:
             raise ValueError(
                 "The API server doesn't respond with a valid json"
             )
