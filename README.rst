@@ -66,7 +66,8 @@ Tests
 
 [Responses](https://github.com/getsentry/responses) and [Nose](https://github.com/nose-devs/nose) are needed for testing.
 
-Run tests with command: nosetests
+Run tests with command:
+nosetests --with-coverage --cover-html
 
 The idea is that use Responses library to mock requests.
 The response requests library get are fake and
