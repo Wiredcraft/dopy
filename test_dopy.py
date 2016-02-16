@@ -198,6 +198,36 @@ class TestAllActiveDroplets(unittest.TestCase):
 
 
     @responses.activate
+    def test_new_droplet(self):
+        """
+         Check New droplet
+        """
+        test_response = open('test_samples/new_droplet.txt', 'r').read()
+        droplet_id = json.loads(test_response)['droplet']["id"]
+        responses.add(
+            responses.POST,
+            urljoin(API_V2_ENDPOINT, 'droplets'),
+            body=test_response,
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            responses.GET,
+            urljoin(API_V2_ENDPOINT, 'droplets/%s' % droplet_id),
+            body=test_response,
+            status=200,
+            content_type="application/json",
+        )
+        result = self.ins.new_droplet(
+            name="TestMachine",
+            size_id="512mb",
+            image_id="15389362",
+            region_id="sgp1",
+            ssh_key_ids="402179",
+        )
+
+
+    @responses.activate
     def test_others(self):
         """
          Check some other tests.
