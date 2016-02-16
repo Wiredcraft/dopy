@@ -178,6 +178,26 @@ class TestAllActiveDroplets(unittest.TestCase):
 
 
     @responses.activate
+    def test_sizes(self):
+        """
+         Check sizes
+        """
+        test_response = open('test_samples/sizes.txt', 'r').read()
+        responses.add(
+            responses.GET,
+            urljoin(API_V2_ENDPOINT, 'sizes/'),
+            body=test_response,
+            status=200,
+            content_type="application/json",
+        )
+        result = self.ins.sizes()
+        assert len(result) == 9
+        assert [i.get("memory") for i in result] == [
+            512, 1024, 2048, 4096, 8192, 16384, 32768, 49152, 65536,
+        ]
+
+
+    @responses.activate
     def test_others(self):
         """
          Check some other tests.
