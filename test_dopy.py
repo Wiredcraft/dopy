@@ -147,6 +147,37 @@ class TestAllActiveDroplets(unittest.TestCase):
 
 
     @responses.activate
+    def test_all_images(self):
+        """
+         Check all images
+        """
+        test_response = open('test_samples/all_images.txt', 'r').read()
+        responses.add(
+            responses.GET,
+            urljoin(API_V2_ENDPOINT, 'images/'),
+            body=test_response,
+            status=200,
+            content_type="application/json",
+        )
+        result = self.ins.all_images()
+        assert len(result) == 12
+        assert [i.get('name') for i in result] == [
+            u'ownCloud 8.2.2 on 14.04',
+            u'Redis 3.0.6 on 14.04',
+            u'Ghost 0.7.5 on 14.04',
+            u'Dokku v0.4.12 on 14.04',
+            u'Ruby on Rails on 14.04 (Postgres, Nginx, Unicorn)',
+            u'Magento 2.0.2 CE on 14.04',
+            u'Discourse on 14.04',
+            u'WordPress on 14.04',
+            u'node v4.3.0 on 14.04',
+            u'GitLab 8.4.4 CE on 14.04',
+            u'Redmine on 14.04',
+            u'initialized'
+        ]
+
+
+    @responses.activate
     def test_others(self):
         """
          Check some other tests.
