@@ -1,4 +1,5 @@
 import json
+import requests
 import responses
 import unittest
 from urlparse import urljoin
@@ -21,9 +22,14 @@ rate_limit_response = {
     "message": "API Rate limit exceeded.",
 }
 
+not_found_response = {
+    "id": "not_found",
+    "message": "The resource you were accessing could not be found.",
+}
 
 error_responses = {
     403: forbidden_response,
+    404: not_found_response,
     429: rate_limit_response,
 }
 
@@ -225,6 +231,86 @@ class TestAllActiveDroplets(unittest.TestCase):
             region_id="sgp1",
             ssh_key_ids="402179",
         )
+        assert result.get("id") == 11134178
+        assert result.get("ip_address") == "127.0.0.1"
+
+
+    @responses.activate
+    def test_all_floating_ips(self):
+        """
+        Check all floating ips
+        """
+        test_response = open('test_samples/all_floating_ips.txt', 'r').read()
+        responses.add(
+            responses.GET,
+            urljoin(API_V2_ENDPOINT, 'floating_ips'),
+            body=test_response,
+            status=200,
+            content_type="application/json",
+        )
+        result = self.ins.all_floating_ips()
+        assert [i.get("ip") for i in result] == [
+            "1.2.3.4",
+            "1.2.3.5"
+        ]
+
+
+    @responses.activate
+    def test_new_floating_ip(self):
+        """
+         Check new floating ip
+        """
+        test_response = open('test_samples/new_floating_ip.txt', 'r').read()
+        responses.add(
+            responses.POST,
+            urljoin(API_V2_ENDPOINT, 'floating_ips'),
+            body=test_response,
+            status=200,
+            content_type="application/json",
+        )
+        result = self.ins.new_floating_ip(droplet_id="10495857")
+        assert result.get("ip") == "111.111.111.111"
+
+
+    @responses.activate
+    def test_destroy_floating_ip_1(self):
+        """
+         Check destroy floating ip
+        """
+        ip_to_destroy = "127.0.0.0"
+        responses.add(
+            responses.DELETE,
+            urljoin(API_V2_ENDPOINT, 'floating_ips/%s' % ip_to_destroy),
+            body=json.dumps(not_found_response),
+            status=404,
+            content_type="application/json",
+        )
+
+
+        # TODO: destroy_floating_ip should not raise requests.exceptions.HTTPError
+        # It should handle this error and raise DoError with message from resp.json()
+        # line 519: `resp.raise_for_status()`  in dopy/manager.py
+        try:
+            self.ins.destroy_floating_ip(ip_to_destroy)
+        except requests.exceptions.HTTPError as e:
+            assert e.response.status_code == 404
+
+    @responses.activate
+    def test_destroy_floating_ip_2(self):
+        """
+         Check destroy floating ip
+        """
+        ip_to_destroy = "127.0.0.1"
+        responses.add(
+            responses.DELETE,
+            urljoin(API_V2_ENDPOINT, 'floating_ips/%s' % ip_to_destroy),
+            body="",
+            status=200,
+            content_type="application/json",
+        )
+
+        # This call does not return anything
+        self.ins.destroy_floating_ip(ip_to_destroy)
 
 
     @responses.activate
