@@ -314,6 +314,43 @@ class TestAllActiveDroplets(unittest.TestCase):
 
 
     @responses.activate
+    def test_ssh_key_invalid(self):
+        """
+         Check new floating ip
+        """
+        test_response = open('test_samples/new_ssh_key_invalid.txt', 'r').read()
+        responses.add(
+            responses.POST,
+            urljoin(API_V2_ENDPOINT, 'account/keys'),
+            body=test_response,
+            status=422,
+            content_type="application/json",
+        )
+        try:
+            self.ins.new_ssh_key("InvalidKey", "LaLaLaLaLa")
+        except DoError as e:
+            assert str(e) == 'Key invalid, key should be of the format `type key [comment]`'
+
+    @responses.activate
+    def test_ssh_key(self):
+        """
+         Check new floating ip
+        """
+        test_response = open('test_samples/new_ssh_key.txt', 'r').read()
+        responses.add(
+            responses.POST,
+            urljoin(API_V2_ENDPOINT, 'account/keys'),
+            body=test_response,
+            status=200,
+            content_type="application/json",
+        )
+
+        fake_key = "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4VCOWFrARc1m3MfEAL50v2Z2siavO3Ijpr/LZ00EZah8EjfZhqjAc/agkljyXmNGpVDpRdtlYco8h3P5vegXOEgKcX74fDYm0vNdVABVD1XSD8ElNyLTCCNk7rZJbi3htJox3Q1n0vnMmB5d20d9occkAx4Ac94RWNS33EC5CszNTMgAIn+uZl0FlQklS1oSyWFahSTWyA6b33qG7Y5E4b6J/caObnPx6EgtBrgi97gXJHZWyYlGrpWmUuhPqs5XToRB08CVxAyzewtq1MXv0p+Po4L1pbHLRf+TSoZ5RSBZZjY4/JMAzdXHNtrrrrrrrrNrbBXKUcNSAHZssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4VCOWFrARc1m3MfEAL50v2Z2siavO3Ijpr/LZ00EZah8EjfZhqjAc/agkljyXmNGpVDpRdtlYco8h3P5vegXOEgKcX74fDYm0vNdVABVD1XSD8ElNyLTCCNk7rZJbi3htJox3Q1n0vnMmB5d20d9occkAx4Ac94RWNS33EC5CszNTMgAIn+uZl0FlQklS1oSyWFahSTWyA6b33qG7Y5E4b6J/caObnPx6EgtBrgi97gXJHZWyYlGrpWmUuhPqs5XToRB08CVxAyzewtq1MXv0p+Po4L1pbHLRf+TSoZ5RSBZZjY4/JMAzdXHNtrrrrrrrrNrbBXKUcNSAHZssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4VCOWFrARc1m3MfEAL50v2Z2siavO3Ijpr/LZ00EZah8EjfZhqjAc/agkljyXmNGpVDpRdtlYco8h3P5vegXOEgKcX74fDYm0vNdVABVD1XSD8ElNyLTCCNk7rZJbi3htJox3Q1n0vnMmB5d20d9occkAx4Ac94RWNS33EC5CszNTMgAIn+uZl0FlQklS1oSyWFahSTWyA6b33qG7Y5E4b6J/caObnPx6EgtBrgi97gXJHZWyYlGrpWmUuhPqs5XToRB08CVxAyzewtq1MXv0p+Po4L1pbHLRf+TSoZ5RSBZZjY4/JMAzdXHNtrrrrrrrrNrbBXKUcNSAHssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4VCOWFrARc1m3MfEAL50v2Z2siavO3Ijpr/LZ00EZah8EjfZhqjAc/agkljyXmNGpVDpRdtlYco8h3P5vegXOEgKcX74fDYm0vNdVABVD1XSD8ElNyLTCCNk7rZJbi3htJox3Q1n0vnMmB5d20d9occkAx4Ac94RWNS33EC5CszNTMgAIn+uZl0FlQklS1oSyWFahSTWyA6b33qG7Y5E4b6J/caObnPx6EgtBrgi97gXJHZWyYlGrpWmUuhPqs5XToRB08CVxAyzewtq1MXv0p+Po4L1pbHLRf+TSoZ5RSBZZjY4/JMAzdXHNtrrrrrrrrNrbBXKUcNSAHZZ"
+        result = self.ins.new_ssh_key("GoodKey", fake_key)
+        assert result.get("name") == "GoodKey"
+        assert result.get("id") == 1706860
+
+    @responses.activate
     def test_others(self):
         """
          Check some other tests.
