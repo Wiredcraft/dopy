@@ -331,9 +331,18 @@ class DoManager(object):
 
     def edit_domain_record(self, domain_id, record_id, record_type, data,
                            name=None, priority=None, port=None, weight=None):
-        params = {'name': name}
-        json = self.request('/domains/%s/records/%s' % (domain_id, record_id),
-                            params, method='PUT')
+        params = {'data': data}
+        if name:
+            params['name'] = name
+        if priority:
+            params['priority'] = priority
+        if port:
+            params['port'] = port
+        if weight:
+            params['weight'] = weight
+        json = self.request(
+            '/domains/%s/records/%s' % (domain_id, record_id), params, method='PUT'
+        )
         return json['domain_record']
 
     def destroy_domain_record(self, domain_id, record_id):

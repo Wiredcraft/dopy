@@ -520,6 +520,150 @@ class TestAllActiveDroplets(unittest.TestCase):
         assert result == True
 
     @responses.activate
+    def test_new_domain(self):
+        test_response = open('test_samples/new_domain.txt', 'r').read()
+        responses.add(
+            responses.POST,
+            urljoin(API_V2_ENDPOINT, 'domains'),
+            body=test_response,
+            status=200,
+            content_type="application/json",
+        )
+
+        result = self.ins.new_domain("new-domain.com", "192.168.1.1")
+        assert result.get("name") == "new-domain.com"
+
+    @responses.activate
+    def test_all_domain(self):
+        test_response = open('test_samples/all_domains.txt', 'r').read()
+        responses.add(
+            responses.GET,
+            urljoin(API_V2_ENDPOINT, 'domains/'),
+            body=test_response,
+            status=200,
+            content_type="application/json",
+        )
+        result = self.ins.all_domains()
+        assert result[0].get("name") == "new-domain.com"
+
+    @responses.activate
+    def test_show_domain(self):
+        domain_id = "new-domain.com"
+        test_response = open('test_samples/show_domain.txt', 'r').read()
+        responses.add(
+            responses.GET,
+            urljoin(API_V2_ENDPOINT, 'domains/%s/' % domain_id),
+            body=test_response,
+            status=200,
+            content_type="application/json",
+        )
+        result = self.ins.show_domain(domain_id)
+        assert result.get("name") == domain_id
+
+    @responses.activate
+    def test_destroy_domain(self):
+        domain_id = "new-domain.com"
+        responses.add(
+            responses.DELETE,
+            urljoin(API_V2_ENDPOINT, 'domains/%s' % domain_id),
+            body="",
+            status=200,
+            content_type="application/json",
+        )
+        result = self.ins.destroy_domain(domain_id)
+        assert result == True
+
+    @responses.activate
+    def test_all_domain_records(self):
+        domain_id = "new-domain.com"
+        test_response = open('test_samples/all_domain_records.txt', 'r').read()
+        responses.add(
+            responses.GET,
+            urljoin(API_V2_ENDPOINT, 'domains/%s/records/' % domain_id),
+            body=test_response,
+            status=200,
+            content_type="application/json",
+        )
+        result = self.ins.all_domain_records(domain_id)
+        is_good = False
+        for line in result:
+            if line.get("type") == "A" and line.get("data") == "192.168.1.1":
+                is_good = True
+                break
+
+        assert is_good == True
+
+    @responses.activate
+    def test_new_domain_records(self):
+        domain_id = "new-domain.com"
+        test_response = open('test_samples/new_domain_record.txt', 'r').read()
+        responses.add(
+            responses.POST,
+            urljoin(API_V2_ENDPOINT, 'domains/%s/records/' % domain_id),
+            body=test_response,
+            status=200,
+            content_type="application/json",
+        )
+        result = self.ins.new_domain_record(
+            "new-domain.com",
+            "CNAME",
+            "cdn1.static-servers.com.",
+            name="static.new-domain.com"
+        )
+        assert result.get("type") == "CNAME"
+        assert result.get("data") == "cdn1.static-servers.com"
+
+    @responses.activate
+    def test_show_domain_record(self):
+        domain_id = "new-domain.com"
+        record_id = 12141431
+        test_response = open('test_samples/show_domain_record.txt', 'r').read()
+        responses.add(
+            responses.GET,
+            urljoin(API_V2_ENDPOINT, 'domains/%s/records/%s' % (domain_id, record_id)),
+            body=test_response,
+            status=200,
+            content_type="application/json",
+        )
+        result = self.ins.show_domain_record(domain_id, record_id)
+        assert result.get("name") == "static.new-domain.com"
+
+    @responses.activate
+    def test_edit_domain_record(self):
+        domain_id = "new-domain.com"
+        record_id = 12141431
+        test_response = open('test_samples/edit_domain_record.txt', 'r').read()
+        responses.add(
+            responses.PUT,
+            urljoin(API_V2_ENDPOINT, 'domains/%s/records/%s' % (domain_id, record_id)),
+            body=test_response,
+            status=200,
+            content_type="application/json",
+        )
+        result = self.ins.edit_domain_record(
+            "new-domain.com",
+            12141431,
+            "CNAME",
+            "cdn-edited.new-domain.com.",
+            name="static.new-domain.com"
+        )
+        assert result.get("data") == "cdn-edited"
+
+    @responses.activate
+    def test_destroy_domain_record(self):
+        domain_id = "new-domain.com"
+        record_id = 12141431
+        responses.add(
+            responses.DELETE,
+            urljoin(API_V2_ENDPOINT, 'domains/%s/records/%s' % (domain_id, record_id)),
+            body="",
+            status=200,
+            content_type="application/json",
+        )
+        result = self.ins.destroy_domain_record(domain_id, record_id)
+        assert result == True
+
+    @responses.activate
     def test_others(self):
         """
          Check some other tests.
