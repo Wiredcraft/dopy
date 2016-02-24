@@ -350,6 +350,76 @@ class TestAllActiveDroplets(unittest.TestCase):
         assert result.get("name") == "GoodKey"
         assert result.get("id") == 1706860
 
+
+
+    @responses.activate
+    def helper_function(self, action, action_key):
+        droplet_id = "11373834"
+        test_response = open('test_samples/%s.txt' % action, 'r').read()
+        responses.add(
+            responses.POST,
+            urljoin(API_V2_ENDPOINT, 'droplets/%s/actions' % droplet_id),
+            body=test_response,
+            status=200,
+            content_type="application/json",
+        )
+
+        if action == "restore_droplet":
+            result = getattr(self.ins, action)(droplet_id, 15937659)
+        elif action == "snapshot_droplet":
+            result = getattr(self.ins, action)(droplet_id, "TestSnapshot")
+        elif action == "resize_droplet":
+            result = getattr(self.ins, action)(droplet_id, "1gb")
+        elif action == "rebuild_droplet":
+            result = getattr(self.ins, action)(droplet_id, "15066966")
+        elif action == "rename_droplet":
+            result = getattr(self.ins, action)(droplet_id, "An-another-name")
+        else:
+            result = getattr(self.ins, action)(droplet_id)
+
+        # Check POST data of the request
+        assert json.loads(responses.calls[0].request.body).get("type") == action_key
+
+        # Check response data
+        assert result['action']['type'] == action_key
+
+    def test_actions(self):
+        """
+         Check actions
+        """
+
+        actions = [
+            ("reboot_droplet", "reboot"),
+            ("power_cycle_droplet", "power_cycle"),
+            ("power_on_droplet", "power_on"),
+            ("resize_droplet", "resize"),
+            ("snapshot_droplet", "snapshot"),
+            ("power_off_droplet", "power_off"),
+            ("shutdown_droplet", "shutdown"),
+            ("restore_droplet", "restore"),
+            ("rebuild_droplet", "rebuild"),
+            ("enable_backups_droplet", "enable_backups"),
+            ("disable_backups_droplet", "disable_backups"),
+            ("rename_droplet", "rename"),
+            ("password_reset_droplet", "password_reset"),
+        ]
+
+        for action, action_key in actions:
+            self.helper_function(action, action_key)
+
+    @responses.activate
+    def test_destroy_droplet(self):
+        droplet_id = "11373834"
+        responses.add(
+            responses.DELETE,
+            urljoin(API_V2_ENDPOINT, 'droplets/%s' % droplet_id),
+            body="",
+            status=200,
+            content_type="application/json",
+        )
+        result = self.ins.destroy_droplet(droplet_id)
+        assert result == dict()
+
     @responses.activate
     def test_others(self):
         """
