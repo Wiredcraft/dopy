@@ -477,6 +477,49 @@ class TestAllActiveDroplets(unittest.TestCase):
         assert result == True
 
     @responses.activate
+    def test_show_ssh_key(self):
+        key_id = 1706860
+        test_response = open('test_samples/show_ssh_key.txt', 'r').read()
+        responses.add(
+            responses.GET,
+            urljoin(API_V2_ENDPOINT, 'account/keys/%s/' % key_id),
+            body=test_response,
+            status=200,
+            content_type="application/json",
+        )
+        result = self.ins.show_ssh_key(key_id)
+        assert result.get('id') == key_id
+        assert result.get('name') == 'GoodKey'
+
+    @responses.activate
+    def test_edit_ssh_key(self):
+        key_id = 1706860
+        test_response = open('test_samples/edit_ssh_key.txt', 'r').read()
+        responses.add(
+            responses.PUT,
+            urljoin(API_V2_ENDPOINT, 'account/keys/%s/' % key_id),
+            body=test_response,
+            status=200,
+            content_type="application/json",
+        )
+        result = self.ins.edit_ssh_key(key_id, "EditedName", "ssh-rsa BCDAB3NzaC1yc2EAAAABIwAAAQEA4VCOWFrARc1m3MfEAL50v2Z2siavO3Ijpr/LZ00EZah8EjfZhqjAc/agkljyXmNGpVDpRdtlYco8h3P5vegXOEgKcX74fDYm0vNdVABVD1XSD8ElNyLTCCNk7rZJbi3htJox3Q1n0vnMmB5d20d9occkAx4Ac94RWNS33EC5CszNTMgAIn+uZl0FlQklS1oSyWFahSTWyA6b33qG7Y5E4b6J/caObnPx6EgtBrgi97gXJHZWyYlGrpWmUuhPqs5XToRB08CVxAyzewtq1MXv0p+Po4L1pbHLRf+TSoZ5RSBZZjY4/JMAzdXHNtrrrrrrrrNrbBXKUcNSAHZ")
+        assert result.get("name") == "EditedName"
+        assert result.get("id") == key_id
+
+    @responses.activate
+    def test_destroy_ssh_key(self):
+        key_id = 1706860
+        responses.add(
+            responses.DELETE,
+            urljoin(API_V2_ENDPOINT, 'account/keys/%s' % key_id),
+            body="",
+            status=200,
+            content_type="application/json",
+        )
+        result = self.ins.destroy_ssh_key(key_id)
+        assert result == True
+
+    @responses.activate
     def test_others(self):
         """
          Check some other tests.
