@@ -421,6 +421,62 @@ class TestAllActiveDroplets(unittest.TestCase):
         assert result == dict()
 
     @responses.activate
+    def test_private_images(self):
+        test_response = open('test_samples/private_images.txt', 'r').read()
+        responses.add(
+            responses.GET,
+            urljoin(API_V2_ENDPOINT, 'images'),
+            body=test_response,
+            status=200,
+            content_type="application/json",
+        )
+        result = self.ins.private_images()
+        assert result[0].get('name') == 'TestSnapshot'
+
+    @responses.activate
+    def test_show_image(self):
+        image_id = 15937659
+        test_response = open('test_samples/show_image.txt', 'r').read()
+        responses.add(
+            responses.GET,
+            urljoin(API_V2_ENDPOINT, 'images/%s' % image_id),
+            body=test_response,
+            status=200,
+            content_type="application/json",
+        )
+        result = self.ins.show_image(image_id)
+        assert result.get('name') == 'TestSnapshot'
+        assert result.get('id') == image_id
+
+    @responses.activate
+    def test_transfer_image(self):
+        image_id = 15937659
+        region_id = 'sgp1'
+        test_response = open('test_samples/transfer_image.txt', 'r').read()
+        responses.add(
+            responses.POST,
+            urljoin(API_V2_ENDPOINT, 'images/%s/actions' % image_id),
+            body=test_response,
+            status=200,
+            content_type="application/json",
+        )
+        result = self.ins.transfer_image(image_id, region_id)
+        assert result['action'].get('type') == "transfer"
+
+    @responses.activate
+    def test_destroy_image(self):
+        image_id = 15937659
+        responses.add(
+            responses.DELETE,
+            urljoin(API_V2_ENDPOINT, 'images/%s' % image_id),
+            body="",
+            status=200,
+            content_type="application/json",
+        )
+        result = self.ins.destroy_image(image_id)
+        assert result == True
+
+    @responses.activate
     def test_others(self):
         """
          Check some other tests.

@@ -1,0 +1,1 @@
+{"action":{"id":85454922,"status":"in-progress","type":"transfer","started_at":"2016-02-24T03:42:45Z","completed_at":null,"resource_id":15937659,"resource_type":"image","region":null,"region_slug":null}}
