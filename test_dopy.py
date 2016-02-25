@@ -2,6 +2,7 @@ import json
 import requests
 import responses
 import unittest
+import re
 from urlparse import urljoin
 import dopy
 from dopy.manager import DoError
@@ -662,6 +663,52 @@ class TestAllActiveDroplets(unittest.TestCase):
         )
         result = self.ins.destroy_domain_record(domain_id, record_id)
         assert result == True
+
+    @responses.activate
+    def test_show_all_actions(self):
+        test_response_1 = open('test_samples/show_all_actions_1.txt', 'r').read()
+        test_response_2 = open('test_samples/show_all_actions_2.txt', 'r').read()
+        test_response_3 = open('test_samples/show_all_actions_3.txt', 'r').read()
+        test_response_4 = open('test_samples/show_all_actions_4.txt', 'r').read()
+        test_response_5 = open('test_samples/show_all_actions_5.txt', 'r').read()
+        responses.add(
+            responses.GET,
+            re.compile(urljoin(API_V2_ENDPOINT, 'actions$')),
+            body=test_response_1,
+            status=200,
+            content_type="application/json",
+        )
+
+        responses.add(
+            responses.GET,
+            re.compile(urljoin(API_V2_ENDPOINT, 'actions\?page=2$')),
+            body=test_response_2,
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            responses.GET,
+            re.compile(urljoin(API_V2_ENDPOINT, 'actions\?page=3$')),
+            body=test_response_3,
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            responses.GET,
+            re.compile(urljoin(API_V2_ENDPOINT, 'actions\?page=4$')),
+            body=test_response_4,
+            status=200,
+            content_type="application/json",
+        )
+        responses.add(
+            responses.GET,
+            re.compile(urljoin(API_V2_ENDPOINT, 'actions\?page=5$')),
+            body=test_response_5,
+            status=200,
+            content_type="application/json",
+        )
+        result = self.ins.show_all_actions()
+        assert len(result) == 87
 
     @responses.activate
     def test_others(self):
