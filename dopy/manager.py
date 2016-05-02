@@ -45,7 +45,6 @@ def paginated(func):
 
 
 class DoManager(object):
-
     def __init__(self, client_id, api_key, api_version=1):
         self.api_endpoint = API_ENDPOINT
         self.client_id = client_id
@@ -108,7 +107,7 @@ class DoManager(object):
                 'backups_enabled': str(backups_enabled).lower(),
             }
             if ssh_key_ids:
-                # Need to be a comma separated string 
+                # Need to be a comma separated string
                 if type(ssh_key_ids) == list:
                     ssh_key_ids = ','.join(ssh_key_ids)
                 params['ssh_key_ids'] = ssh_key_ids
@@ -274,7 +273,7 @@ class DoManager(object):
         if self.api_version == 2:
             json = self.request('/images?private=true')
             return json['images']
-        else: 
+        else:
             params = {'filter': 'my_images'}
             json = self.request('/images/', params)
             return json['images']
@@ -549,6 +548,83 @@ class DoManager(object):
         else:
             raise DoError(v2_api_required_str)
 
+#tags=====================================
+    def new_tag(self, name):
+        if self.api_version == 2:
+            params = {
+                'name': str(name)
+            }
+            json = self.request('/tags', params=params, method='POST')
+            return json['tag']
+        else:
+            raise DoError(self.v2_api_required_str)
+
+    def show_tag(self, name):
+        if self.api_version == 2:
+            json = self.request('/tags/%s' % name, method='GET')
+            return json['tag']
+        else:
+            raise DoError(self.v2_api_required_str)
+
+    def all_tags(self):
+        if self.api_version == 2:
+            json = self.request('/tags', method='GET')
+            return json['tags']
+        else:
+            raise DoError(self.v2_api_required_str)
+
+    def edit_tag(self, current_name, new_name):
+        if self.api_version == 2:
+            params = {
+                'name': str(new_name)
+            }
+            json = self.request('/tags/%s' % current_name, params=params, method='PUT')
+            return json['tag']
+        else:
+            raise DoError(self.v2_api_required_str)
+
+    def destroy_tag(self, name):
+        if self.api_version == 2:
+            json = self.request('/tags/%s' % name, method='DELETE')
+            json.pop('status', None)
+            return json
+        else:
+            raise DoError(self.v2_api_required_str)
+
+    def tag_resource(self, tag_name, resource_id, resource_type='droplet'):
+        if self.api_version == 2:
+            params = {
+                'resources': [
+                    {
+                        'resource_id': str(resource_id),
+                        'resource_type': str(resource_type)
+                    }
+                ]
+            }
+
+            json = self.request('/tags/%s/resources' % tag_name, params=params, method='POST')
+            json.pop('status', None)
+            return json
+        else:
+            raise DoError(self.v2_api_required_str)
+
+    def untag_resource(self, tag_name, resource_id, resource_type='droplet'):
+        if self.api_version == 2:
+            params = {
+                'resources': [
+                    {
+                        'resource_id': str(resource_id),
+                        'resource_type': str(resource_type)
+                    }
+                ]
+            }
+
+            json = self.request('/tags/%s/resources' % tag_name, params=params, method='DELETE')
+            json.pop('status', None)
+            return json
+        else:
+            raise DoError(self.v2_api_required_str)
+
 #low_level========================================
     def request(self, path, params={}, method='GET'):
         if not path.startswith('/'):
@@ -587,23 +663,23 @@ class DoManager(object):
 
         return json
 
+    def process_response(self, response):
+        if response.status_code == 204:
+            return {'status': response.status_code}
+        else:
+            return response.json()
+
     @paginated
-    def request_v2(self, url, headers=None, params=None, method='GET'):
-        if headers is None:
-            headers = {}
-
-        if params is None:
-            params = {}
-
+    def request_v2(self, url, headers={}, params={}, method='GET'):
         headers['Content-Type'] = 'application/json'
 
         try:
             if method == 'POST':
                 resp = requests.post(url, data=json_module.dumps(params), headers=headers, timeout=60)
-                json = resp.json()
+                json = self.process_response(resp)
             elif method == 'DELETE':
-                resp = requests.delete(url, headers=headers, timeout=60)
-                json = {'status': resp.status_code}
+                resp = requests.delete(url, data=json_module.dumps(params), headers=headers, timeout=60)
+                json = self.process_response(resp)
             elif method == 'PUT':
                 resp = requests.put(url, headers=headers, params=params, timeout=60)
                 json = resp.json()
